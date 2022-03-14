@@ -159,7 +159,6 @@ cython_debug/
 !test.csv
 
 # dependencies
-node_modules
 /.pnp
 .pnp.js
 
@@ -181,3 +180,4 @@ yarn-error.log*
 nohup.out
 tmp_corpus
 package-lock.json
+node_modules
