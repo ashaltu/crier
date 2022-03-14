@@ -159,7 +159,7 @@ cython_debug/
 !test.csv
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.js
 
