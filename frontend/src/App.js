@@ -21,11 +21,40 @@ export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      cookie: cookie,
       token: initToken,
       expiration: initExpiration,
     };
   }
+
+  createCookie = async () => {
+    let response = await fetch("http://40.122.200.108:5001/createtoken");
+    let data = await response.json();
+
+    let results = data;
+    console.log(data);
+    let expireDate = new Date( Date.parse(results['expiration']) );
+    let new_cookie = "token=" + results['new_token'] + "; expires=" + expireDate.toUTCString() + ";";
+    this.setState({
+        cookie: new_cookie,
+        token: results['new_token'],
+        expiration: results['expiration']
+    });
+    
+    document.cookie = new_cookie;
+  };
+
+  uploadImages = () => {
+    return;
+  }
+
+  deleteImages = () => {
+    return;
+  }
+
+  searchImage = () => {
+    return;
+  }
+
 
   render () {
 
@@ -43,11 +72,13 @@ export default class App extends Component {
             minHeight: '70vh'
           }}
         >
-          
+
+          <button onClick={this.createCookie}>Create Cookie</button>
+
         </div>
       </div>
     )
-  }
+  };
 
   
 

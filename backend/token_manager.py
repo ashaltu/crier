@@ -10,7 +10,7 @@ import model_defs
 
 # Important constants.
 TMP_CORPUS_DIR = "tmp_corpus"
-EXPIRATION_DELTA = datetime.timedelta(seconds=3600)    # One hour until expiration
+EXPIRATION_DELTA = datetime.timedelta(seconds=1800)    # Half Hour until expiration
 TOKEN_CLEANER_DELTA = 60    # Clean up stale tokens every minute
 
 EXAMPLE_IMG_CORPUS_DIR = "example_image_corpus" # change
