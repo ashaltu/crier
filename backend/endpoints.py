@@ -1,6 +1,7 @@
 import os
 import json
 import utils
+import threading
 
 from flask import Flask, request, jsonify, make_response, send_file
 from flask_restful import Resource
@@ -61,8 +62,11 @@ class AddImages(Resource):
                 img.save(os.path.join(usr_dir, img.filename))
             print(f"Successfully saved new images to corpus for token: {token}")
 
-            token_manager.crier.create_database(usr_dir)
-            print(f"Indexed image corpus for token: {token}")
+            threading.Thread(target=token_manager.crier.create_database, args=(usr_dir,)).start()  # Intensive task so do in backend.
+            token_manager.crier.token_threads.add(token)    # Indicates the index is being created.
+            #token_manager.crier.create_database(usr_dir)
+            print(f"Starting index job on image corpus for token: {token}")
+            #print(f"Indexed image corpus for token: {token}")
 
             data = jsonify({'success': True})
             return make_response(data, 200)  
@@ -92,19 +96,28 @@ class SearchDatabase(Resource):
             for _, img in request.files.items():
                 img.save(search_img_path)
 
-            #neighbors, images, image_names, distances = token_manager.crier.search(corpus_dir, search_basename)
-            neighbors, image_paths, distances = token_manager.crier.search(corpus_dir, search_basename)
-            print(f"Search request successfully fulfilled for token: {token}")
+            data = None
+            if token_manager.crier.engine_available(corpus_dir):
+                #neighbors, images, image_names, distances = token_manager.crier.search(corpus_dir, search_basename)
+                neighbors, image_paths, distances = token_manager.crier.search(corpus_dir, search_basename)
+                print(f"Search request successfully fulfilled for token: {token}")
+                data = jsonify({
+                            #'neighbors': neighbors,    # Uncomment if frontend has access to ids.
+                            #'image': images,
+                            'image_paths': image_paths,
+                            'distances': distances[0].tolist(),
+                            'success': True
+                            })
+            else:
+                print(f"Search request not fulfilled since engine still indexing from token: {token}")
+                data = jsonify({
+                            'success': False,
+                            'reason': f"Search request not fulfilled since engine still indexing from token: {token}"
+                            })
 
             os.remove(search_img_path)  # Remove the user's file after done searching.
 
-            data = jsonify({
-                #'neighbors': neighbors,    # Uncomment if frontend has access to ids.
-                #'image': images,
-                'image_paths': image_paths,
-                'distances': distances[0].tolist(),
-                'success': True
-                })
+
             return make_response(data, 200)  
 
         return {"ErrorMessage": "Invalid POST message."}, 201

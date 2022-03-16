@@ -23,6 +23,7 @@ class CRIER(object):
       self.encoder.build((None,)+self.image_size+(3,))        # Batch input shape.
       self.encoder.summary()  
 
+      self.token_threads = set()
       self.engines = dict()
     
     # Creates a new search engine mapped from its corpus directory. If corpus directory already exists, does nothing.
@@ -33,33 +34,39 @@ class CRIER(object):
 
     # Deletes a search engine mapped from its corpus directory. If corpus directory doesn't exist, does nothing.
     def delete_engine(self, corpus_dir):
-      if corpus_dir not in self.engines: return
+      if corpus_dir not in self.engines or not self.engine_available(os.path.basename(corpus_dir)): return
 
       self.engines.pop(corpus_dir, None)
 
     # See SearchEngine.create_database.
     def create_database(self, corpus_dir):
-      if corpus_dir not in self.engines: return
+      if corpus_dir not in self.engines or not self.engine_available(os.path.basename(corpus_dir)): return
 
       self.engines[corpus_dir].create_database(self.encoder, corpus_dir)
+      if not self.engine_available(corpus_dir): self.token_threads.remove(corpus_dir)
+      print(f"Finished indexing job on token: {corpus_dir}")
 
     # See SearchEngine.update_database.
     def update_database(self, corpus_dir):
-      if corpus_dir not in self.engines: return
+      if corpus_dir not in self.engines or not self.engine_available(os.path.basename(corpus_dir)): return
 
       self.engines[corpus_dir].update_database(self.encoder, corpus_dir)
+      if not self.engine_available(corpus_dir): self.token_threads.remove(corpus_dir)
+      print(f"Finished indexing job on token: {corpus_dir}")
 
     # See SearchEngine.search_database.
     def search_database(self, corpus_dir, image_filename):
-      if corpus_dir not in self.engines: return None
+      if corpus_dir not in self.engines or not self.engine_available(os.path.basename(corpus_dir)): return None
 
       image_path = os.path.join(corpus_dir, image_filename)
       return self.engines[corpus_dir].search_database(self.encoder, image_path)
     
     # See SearchEngine.search.
     def search(self, corpus_dir, image_filename):
-      if corpus_dir not in self.engines: return None
+      if corpus_dir not in self.engines or not self.engine_available(os.path.basename(corpus_dir)): return None
 
       image_path = os.path.join(corpus_dir, image_filename)
       return self.engines[corpus_dir].search(self.encoder, image_path)
-    
+
+    def engine_available(self, token):
+      return os.path.basename(token) not in self.token_threads

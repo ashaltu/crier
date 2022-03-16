@@ -47,6 +47,8 @@ class TokenManager(object):
     # Byproduct is a temporary storage that will expire in 60 minutes.
     def create_token(self):
         new_token = utils.generate_token()
+        while new_token in self.tokens:
+            new_token = utils.generate_token()
         new_usr_dir = os.path.join(TMP_CORPUS_DIR, new_token)
         os.mkdir(new_usr_dir)
 
@@ -104,3 +106,4 @@ class TokenManager(object):
     # Looks for stale tokens and removes them.
     def __start_token_cleaner(self):
         threading.Timer(TOKEN_CLEANER_DELTA, self.clean_stale_tokens).start()
+

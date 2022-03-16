@@ -24,13 +24,11 @@ class SearchEngine(object):
       for i in range(num_batches):
         pil_sub_list = pil_list[i*model_defs.BATCH_SIZE : (i+1)*model_defs.BATCH_SIZE]
         corpus_image_id_arr_map = utils.load_image_id_arr_map(dict(pil_sub_list))
-
         embedding_sub_map = utils.load_image_id_embedding_map(encoder, corpus_image_id_arr_map)
-        print(f"LEN of old_embedding_map = {len(corpus_image_id_embedding_map)}")
-        print(f"LEN of sub_map = {len(embedding_sub_map)}")
-        print(f"LEN of unpack = {len({**embedding_sub_map,**corpus_image_id_embedding_map})}")
-        corpus_image_id_embedding_map.update(embedding_sub_map)
-        print(f"LEN of embedding_map = {len(corpus_image_id_embedding_map)}")
+
+        # We do this since there would be identical conflicing keys and we'd lose embeddings.
+        reindexed_embedding_sub_map = {(k+i*model_defs.BATCH_SIZE) : v for k,v in embedding_sub_map.items()}
+        corpus_image_id_embedding_map.update(reindexed_embedding_sub_map)
 
       assert(len(self.corpus_image_id_paths_map) == len(corpus_image_id_embedding_map))
       self.search_engine = utils.load_search_engine(corpus_image_id_embedding_map.values(), self.num_results)

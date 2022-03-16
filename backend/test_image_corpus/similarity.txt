@@ -8,9 +8,9 @@ dog_sunflower.jpg sunflower2.jpg
 sunflower.jpg sunflower.jpg
 sunflower.jpg sunflower2.jpg
 sunflower.jpg dog_sunflower.jpg
-sunflower2 sunflower2.jpg
-sunflower2 sunflower.jpg
-sunflower2 dog_sunflower.jpg
+sunflower2.jpg sunflower2.jpg
+sunflower2.jpg sunflower.jpg
+sunflower2.jpg dog_sunflower.jpg
 house.jpg house.jpg
 house.jpg house2.jpg
 house2.jpg house2.jpg

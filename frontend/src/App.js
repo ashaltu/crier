@@ -29,7 +29,8 @@ export default class App extends Component {
       image_paths: [],
       distances: [],
       showDemo: true, // temporary!
-      markdown: ''
+      markdown: '',
+      errorLabel: ''
     };
 
     this.backendURL = "http://40.122.200.108:5001/";
@@ -110,11 +111,20 @@ export default class App extends Component {
     .then(response => response.json())
     .then(result => {
       //let requireImgs = result['image_paths'].map((v, i) => require(v));
-      this.setState({
-        image_paths: result['image_paths'],
-        distances: result['distances']
-      });
-      console.log('Success:', result);
+      if (result['success'] === false) {
+        this.setState({
+          errorLabel: 'Engine is still indexing added images, please wait 15-30s and try again.'
+        })
+        console.log('Still indexing:', result);
+      } else {
+        this.setState({
+          image_paths: result['image_paths'],
+          distances: result['distances'],
+          errorLabel: ''
+        });
+        console.log('Success:', result);
+      }
+
     })
     .catch(error => {
       console.error('Error:', error);
@@ -126,7 +136,8 @@ export default class App extends Component {
 
     return (
       <>
-        {zip(this.state.image_paths, this.state.distances).map(
+        {this.state.image_paths && this.state.distances &&
+        zip(this.state.image_paths, this.state.distances).map(
           function(path_dist_blob, idx) {
             return <ImageEmbed imgPath={path_dist_blob[0]} distance={path_dist_blob[1]}/>;
           }
@@ -141,6 +152,12 @@ export default class App extends Component {
       <div>
         <Header />
 
+        {
+          this.state.errorLabel && 
+          <>
+            <h3>{this.state.errorLabel}</h3>
+          </>
+        }
         {
           this.state.showDemo && 
           <>

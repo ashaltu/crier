@@ -78,4 +78,4 @@ def example_run():
     print(f"Image {os.path.basename(image_path)} with distance {distance}")
 
 
-example_run()
+# example_run()
