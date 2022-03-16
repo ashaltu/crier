@@ -17,6 +17,7 @@ api.add_resource(endpoints.CreateToken, "/createtoken")
 api.add_resource(endpoints.RemoveImages, "/removeimages")
 api.add_resource(endpoints.AddImages, "/addimages")
 api.add_resource(endpoints.SearchDatabase, "/search")
+api.add_resource(endpoints.RetrieveImages, "/<token>/<imgname>")
 print(f"Successfully installed endpoint resources")
 print(f"Listening for requests...")
 

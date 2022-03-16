@@ -1,8 +1,11 @@
 import React, { Component } from 'react'
-import axios from "axios"
-import {saveAs} from 'file-saver';
+
 import ImageEmbed from './components/ImageEmbed';
+import Writeup from './components/Writeup';
 import Header from "./components/Header";
+import Demo from "./components/Demo";
+
+import writeupmd from "./components/writeup.md"
 
 const parseCookie = str =>
   str
@@ -23,11 +26,21 @@ export default class App extends Component {
     this.state = {
       token: initToken,
       expiration: initExpiration,
+      image_paths: [],
+      distances: [],
+      showDemo: true, // temporary!
+      markdown: ''
     };
+
+    this.backendURL = "http://40.122.200.108:5001/";
+  }
+
+  componentDidMount() {
+    fetch(writeupmd).then(res => res.text()).then(text => this.setState({markdown: text}));
   }
 
   createCookie = async () => {
-    let response = await fetch("http://40.122.200.108:5001/createtoken");
+    let response = await fetch(this.backendURL + "createtoken");
     let data = await response.json();
 
     let results = data;
@@ -35,7 +48,6 @@ export default class App extends Component {
     let expireDate = new Date( Date.parse(results['expiration']) );
     let new_cookie = "token=" + results['new_token'] + "; expires=" + expireDate.toUTCString() + ";";
     this.setState({
-        cookie: new_cookie,
         token: results['new_token'],
         expiration: results['expiration']
     });
@@ -44,17 +56,84 @@ export default class App extends Component {
   };
 
   uploadImages = () => {
-    return;
-  }
+    const formData = new FormData();
+    const photos = document.querySelector('input[id="uploadimages"][multiple]');
+
+    formData.append('token', this.state.token);
+    for (let i = 0; i < photos.files.length; i++) {
+      formData.append(`photos_${i}`, photos.files[i]);
+    }
+
+    fetch(this.backendURL + "addimages", {
+      method: 'POST',
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Success:', result);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  };
 
   deleteImages = () => {
-    return;
+    fetch(this.backendURL + "removeimages", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 'token': this.state.token }),
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Success:', result);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
   }
 
   searchImage = () => {
-    return;
+    const formData = new FormData();
+    const photos = document.querySelector('input[id="searchimages"][multiple]');
+
+    formData.append('token', this.state.token);
+    for (let i = 0; i < photos.files.length; i++) {
+      formData.append(`photos_${i}`, photos.files[i]);
+    }
+
+    fetch(this.backendURL + "search", {
+      method: 'POST',
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(result => {
+      //let requireImgs = result['image_paths'].map((v, i) => require(v));
+      this.setState({
+        image_paths: result['image_paths'],
+        distances: result['distances']
+      });
+      console.log('Success:', result);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
   }
 
+  insertImages = () => {
+    const zip = (a, b) => a.map((k, i) => [k, b[i]]);
+
+    return (
+      <>
+        {zip(this.state.image_paths, this.state.distances).map(
+          function(path_dist_blob, idx) {
+            return <ImageEmbed imgPath={path_dist_blob[0]} distance={path_dist_blob[1]}/>;
+          }
+        )}
+      </>
+    );
+  };
 
   render () {
 
@@ -62,25 +141,27 @@ export default class App extends Component {
       <div>
         <Header />
 
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            textAlign: 'center',
-            minHeight: '70vh'
-          }}
-        >
+        {
+          this.state.showDemo && 
+          <>
+            <button onClick={() => this.setState({showDemo: false})}>
+              Show Writeup
+            </button>
+            {Demo(this.createCookie, this.uploadImages, this.deleteImages, this.searchImage, this.insertImages)}
+          </>
+        }
 
-          <button onClick={this.createCookie}>Create Cookie</button>
-
-        </div>
+        { 
+          !this.state.showDemo && 
+          <>
+            <button onClick={() => this.setState({showDemo: true})}>
+              Show Demo
+            </button>
+            {Writeup(this.state.markdown)}
+          </>
+        }
       </div>
     )
   };
 
-  
-
-
-}
+};

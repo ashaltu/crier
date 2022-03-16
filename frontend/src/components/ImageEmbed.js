@@ -1,11 +1,14 @@
-const testImgPath = "/home/ashaltu/crier/backend/tmp_corpus/dmcuorqdf7d1gomsgae8f8/sunflower.jpg"
-const ImageEmbed = ({videoID, startTime}) => {
-    const url = `/home/ashaltu/crier/backend/tmp_corpus/dmcuorqdf7d1gomsgae8f8/sunflower.jpg`
+const ImageEmbed = ({imgPath, distance}) => {
+    let imgPathStack = imgPath.split("/");
+    const imgName = imgPathStack.pop();
+    const token = imgPathStack.pop();
+    const imgUrl = `http://40.122.200.108:5001/${token}/${imgName}`;
     return (
         <>
-            <iframe
-            src={url}
-            title='User Image'
+            <img
+            width="200"
+            src={imgUrl}
+            alt={imgName}
             />
         </>
     )

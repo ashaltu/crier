@@ -20,7 +20,6 @@ MODEL_NAME = "efficientnetv2-s"                 # change (maybe?)
 model_handle = model_defs.MODEL_HANDLE_MAP.get(MODEL_NAME)
 pixels = model_defs.MODEL_IMAGE_SIZE_MAP.get(MODEL_NAME)
 IMAGE_SIZE = (pixels, pixels)
-#BATCH_SIZE = 16 # Not needed
 
 print(f"Selected model: {MODEL_NAME} : {model_handle}")
 print(f"Input size {IMAGE_SIZE}")

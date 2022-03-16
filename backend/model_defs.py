@@ -88,3 +88,5 @@ MODEL_IMAGE_SIZE_MAP = {
   "nasnet_large": 331,
   "pnasnet_large": 331,
 }
+
+BATCH_SIZE = int(16)

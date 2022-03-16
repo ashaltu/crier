@@ -2,7 +2,7 @@ import os
 import json
 import utils
 
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response, send_file
 from flask_restful import Resource
 
 # Local
@@ -53,11 +53,11 @@ class AddImages(Resource):
                     'img3_name' : img3_file,
                 }
         '''
-        if 'token' in request.form and token_manager.token_exists(request.form['token']):
+        if 'token' in request.form and token_manager.token_exists(request.form['token']) and len(request.files):
             token = request.form['token']
             usr_dir = token_manager.token_corpus_map[token]
 
-            for img in request.files.getlist("file[]"):
+            for _, img in request.files.items():
                 img.save(os.path.join(usr_dir, img.filename))
             print(f"Successfully saved new images to corpus for token: {token}")
 
@@ -83,13 +83,13 @@ class SearchDatabase(Resource):
                     'img_name' : img1_file
                 }
         '''
-        if 'token' in request.form and token_manager.token_exists(request.form['token']):
+        if 'token' in request.form and token_manager.token_exists(request.form['token']) and len(request.files):
             token = request.form['token']
             corpus_dir = token_manager.token_corpus_map[token]
-            search_basename = f"searchimg_{utils.generate_token()}"
+            search_basename = f"searchimg_{utils.generate_token()}.jpg"
             search_img_path = os.path.join(corpus_dir, search_basename)
             
-            for img in request.files.getlist("file[]"):
+            for _, img in request.files.items():
                 img.save(search_img_path)
 
             #neighbors, images, image_names, distances = token_manager.crier.search(corpus_dir, search_basename)
@@ -108,4 +108,13 @@ class SearchDatabase(Resource):
             return make_response(data, 200)  
 
         return {"ErrorMessage": "Invalid POST message."}, 201
-        
+
+class RetrieveImages(Resource):
+    def get(self, token, imgname):
+        if token_manager.token_exists(token):
+            return send_file(os.path.join(token_manager.token_corpus_map[token], imgname), mimetype='image/jpg')
+            
+        return {"ErrorMessage": "Invalid GET message."}, 201
+
+    def post(self, token, imgname):
+        return {"ErrorMessage": "Request should be GET."}

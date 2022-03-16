@@ -7,12 +7,13 @@ import tensorflow_hub as tfhub
 # Local
 import utils
 import search_engine
-
+import model_defs
 
 class CRIER(object):
-    def __init__(self, model_dir, image_size, num_results=10):
+    def __init__(self, model_dir, image_size, num_results=10, batch_size=model_defs.BATCH_SIZE):
       self.num_results = num_results
       self.image_size = image_size
+      self.batch_size = batch_size
 
       self.encoder = tf.keras.Sequential(
           [
