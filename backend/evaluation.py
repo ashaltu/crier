@@ -161,7 +161,7 @@ def run(use_cifar=False, use_imagenette=False):
       test_image_corpus = "/content/crier/backend/cifar100-128/test_corpus"    # Will create this dir. 50 images per class to test           
       test_image_names, expected_paths = extractSimilarImagesAnswersCifarOrImagenette(cifar_dir)
     elif use_imagenette:
-      # Should run on Google Colab. Change cifar_dir, index_image_corpus, and test_image_corpus to wherever your data is.
+      # Should run on Google Colab. Change imagenette_dir, index_image_corpus, and test_image_corpus to wherever your data is.
       # Dataset available at: https://github.com/fastai/imagenette
       # The used dataset is only the test dataset of https://github.com/fastai/imagenette
       imagenette_dir = "/content/crier/backend/imagenette2-320"                        # Should exist already.
