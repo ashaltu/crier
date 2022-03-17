@@ -56,14 +56,6 @@ def extractSimilarImagesAnswers(filepath):
           -img002.png
           -img950.png
   
-  similar_images is extracted as such:
-    {
-      dog: {'img103.png', ..., 'img481.png'}
-      cat: {'img937.png', ..., 'img168.png'}
-      ...
-      airplane: {'img071.png', ..., 'img629.png'}
-    }
-  
   expected_paths is extracted as such:  # should align with actual_paths in terms of input to output
     [
       ['img103.png', ..., 'img481.png'], # retrieved images similar to dogs (a specific dog image)
@@ -80,13 +72,13 @@ def extractSimilarImagesAnswers(filepath):
         -img01.png
         -img02.png
         -img50.png
+
+  Function also works with Imagenette, make sure to set original_dir_name
 '''
-def extractSimilarImagesAnswersCifar(cifar_dir):
+def extractSimilarImagesAnswersCifarOrImagenette(cifar_dir, original_dir_name='test', per_class_num_index=95):
     # Need test_image_names (5 images in each class, total of 500 test imgs):
     # Make similar_images as mentioned above^
-    # For each key in similar_images, turn it's value into a list and shuffle
-    # For each key in similar_images, save first 95 values into an index_corpus_map (keep classes as key)
-    # For each key in similar_images, save last 5 into an test_corpus_map (keep classes as key)
+    # For each class dir, turn it's images into a list and shuffle
     # Turn entire test_corpus values into single list and shuffle (save into test_image_names).
     # While doing above step, generate expected_paths 
  
@@ -94,30 +86,21 @@ def extractSimilarImagesAnswersCifar(cifar_dir):
     os.mkdir(os.path.join(cifar_dir, "index_corpus"))
     os.mkdir(os.path.join(cifar_dir, "test_corpus"))
 
-    similar_images = dict() # basically index_corpus_map + test_corpus_map
-    index_corpus_map = dict()
-    test_corpus_map = dict()
     test_image_paths = []
     expected_paths = []
-    for dir in os.listdir(os.path.join(cifar_dir, 'test')):
-      class_img_names = os.listdir(os.path.join(cifar_dir, 'test', dir))
+    for dir in os.listdir(os.path.join(cifar_dir, original_dir_name)):
+      class_img_names = os.listdir(os.path.join(cifar_dir, original_dir_name, dir))
       random.shuffle(class_img_names)
 
-      index_corpus_map.update({dir: set(class_img_names[:95])})
-      test_corpus_map.update({dir: set(class_img_names[95:])})
-      similar_images.update({dir: set(class_img_names)})
-
-      #test_image_paths.extend(class_img_names[95:])
-      for img_name in class_img_names[95:]:
-        #expected_paths.append(class_img_names[:95])
+      for img_name in class_img_names[per_class_num_index:]:
         new_img_path = os.path.join(cifar_dir, "test_corpus", img_name)
-        os.rename(os.path.join(cifar_dir, "test", dir, img_name), new_img_path)
+        os.rename(os.path.join(cifar_dir, original_dir_name, dir, img_name), new_img_path)
         test_image_paths.append(new_img_path)
 
       sub_expected_paths = []
-      for img_name in class_img_names[:95]:
+      for img_name in class_img_names[:per_class_num_index]:
         new_img_path = os.path.join(cifar_dir, "index_corpus", img_name)
-        os.rename(os.path.join(cifar_dir, "test", dir, img_name), new_img_path)
+        os.rename(os.path.join(cifar_dir, original_dir_name, dir, img_name), new_img_path)
         sub_expected_paths.append(new_img_path)
       expected_paths.append(sub_expected_paths)
 
@@ -165,30 +148,42 @@ def precision(actual_paths, expected_paths, k, image_names):
 
     print(f"Precision@{k}: {p}")
 
-def run(use_cifar=False):
+def run(use_cifar=False, use_imagenette=False):
     # Set load evaluation dataset.
     print(f"Using cifar: {use_cifar}")
+    print(f"Using imagenette: {use_imagenette}")
     if use_cifar: 
-        # Should run on Google Colab. Change cifar_dir, index_image_corpus, and test_image_corpus to wherever your data is.
-        # Dataset available at: https://drive.google.com/file/d/1Zivf7cXpXAHPoVii0Mp3hecWJJx4ZBY_/view?usp=sharing
-        # The used dataset is only the test dataset of https://www.kaggle.com/joaopauloschuler/cifar100-128x128-resized-via-cai-super-resolution.
-        cifar_dir = "/content/crier/backend/cifar100-128"                        # Should exist already.
-        index_image_corpus = "/content/crier/backend/cifar100-128/index_corpus"  # Will create this dir. 950 images per class to index.
-        test_image_corpus = "/content/crier/backend/cifar100-128/test_corpus"    # Will create this dir. 50 images per class to test           
-        test_image_names, expected_paths = extractSimilarImagesAnswersCifar(cifar_dir)
+      # Should run on Google Colab. Change cifar_dir, index_image_corpus, and test_image_corpus to wherever your data is.
+      # Dataset available at: https://drive.google.com/file/d/1Zivf7cXpXAHPoVii0Mp3hecWJJx4ZBY_/view?usp=sharing
+      # The used dataset is only the test dataset of https://www.kaggle.com/joaopauloschuler/cifar100-128x128-resized-via-cai-super-resolution.
+      cifar_dir = "/content/crier/backend/cifar100-128"                        # Should exist already.
+      index_image_corpus = "/content/crier/backend/cifar100-128/index_corpus"  # Will create this dir. 950 images per class to index.
+      test_image_corpus = "/content/crier/backend/cifar100-128/test_corpus"    # Will create this dir. 50 images per class to test           
+      test_image_names, expected_paths = extractSimilarImagesAnswersCifarOrImagenette(cifar_dir)
+    elif use_imagenette:
+      # Should run on Google Colab. Change cifar_dir, index_image_corpus, and test_image_corpus to wherever your data is.
+      # Dataset available at: https://github.com/fastai/imagenette
+      # The used dataset is only the test dataset of https://github.com/fastai/imagenette
+      imagenette_dir = "/content/crier/backend/imagenette2-320"                        # Should exist already.
+      index_image_corpus = "/content/crier/backend/imagenette2-320/index_corpus"  # Will create this dir. 950 images per class to index.
+      test_image_corpus = "/content/crier/backend/imagenette2-320/test_corpus"    # Will create this dir. 50 images per class to test           
+      test_image_names, expected_paths = extractSimilarImagesAnswersCifarOrImagenette(imagenette_dir, 'train', 880)  
     else:
-        index_image_corpus = "example_image_corpus"
-        test_image_corpus = "example_image_corpus"
-        similarity_path = "test_image_corpus/similarity.txt"
-        similar_images = extractSimilarImagesAnswers(similarity_path)
-        test_image_names = os.listdir(test_image_corpus)
-        expected_paths = [similar_images[img_name] for img_name in test_image_names]
+      index_image_corpus = "example_image_corpus"
+      test_image_corpus = "example_image_corpus"
+      similarity_path = "test_image_corpus/similarity.txt"
+      similar_images = extractSimilarImagesAnswers(similarity_path)
+      test_image_names = os.listdir(test_image_corpus)
+      expected_paths = [similar_images[img_name] for img_name in test_image_names]
 
-    num_results = 25 if use_cifar else 10
-    k_range = range(4, 21) if use_cifar else range(1, 11)
-    output_mapk = "mapk_cifar.png" if use_cifar else "mapk_custom.png"
-    output_mark = "mark_cifar.png" if use_cifar else "mark_custom.png"
+    num_results = 25 if use_cifar or use_imagenette else 10
+    k_range = range(4, 21) if use_cifar or use_imagenette else range(1, 11)
+    output_mapk = "mapk_cifar.png" if use_cifar or use_imagenette else "mapk_custom.png"
+    output_mark = "mark_cifar.png" if use_cifar or use_imagenette else "mark_custom.png"
 
+    if use_imagenette:
+      output_mapk = "mapk_imagenette.png"
+      output_mark = "mark_imagenette.png"
     # Build Retrieval models.
     hist_retriever = histogram.HistogramRetrieval(index_image_corpus, num_results)
     crier_retriever = model.CRIER(token_manager.MODEL_NAME, token_manager.IMAGE_SIZE, num_results)
@@ -238,6 +233,7 @@ def run(use_cifar=False):
     print(f"Saved MAP@k and MAP@k plots.")
 
     
-# run(False) Can run locally without any additional setup(besides installing from requirements.txt)
-# run(True)  Preferable to use Google Colab for higher memory bandwith(suggested is 12gb RAM). Feel free to experiment with
-#            changing BATCH_SIZE in model_defs.
+# run() # Can run locally without any additional setup(besides installing from requirements.txt)
+# run(use_cifar=True)  # Preferable to use Google Colab for higher memory bandwith(suggested is 12gb RAM). Feel free to experiment with
+#                      # changing BATCH_SIZE in model_defs.
+# run(use_imagenette=True) # Same as use_cifar but for the Imagenette2-320 dataset.

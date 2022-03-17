@@ -36,7 +36,7 @@ def compute_histogram(image_path):
 def compute_histograms(corpus_dir):
     dir_prefix = os.path.join(os.getcwd(), corpus_dir)
     image_paths = []
-    for ext in ['*.png', '*.jpg', '*.jpeg']:
+    for ext in ['*.png', '*.jpg', '*.jpeg', '*.JPEG', '*.PNG', '*.jpg']:
       image_paths.extend(glob.glob(os.path.join(dir_prefix, ext)))
     
     bstack = np.empty((0,  8 * 8 * 8))

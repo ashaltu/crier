@@ -12,7 +12,7 @@ import tensorflow as tf
 def load_image_id_paths_map(images_dir):
   dir_prefix = os.path.join(os.getcwd(), images_dir)
   image_paths = []
-  for ext in ['*.png', '*.jpg', '*.jpeg']:
+  for ext in ['*.png', '*.jpg', '*.jpeg', '*.JPEG', '*.PNG', '*.jpg']:
     image_paths.extend(glob.glob(os.path.join(dir_prefix, ext)))
   return {idx: path for idx, path in enumerate(image_paths)}
 
