@@ -1,4 +1,5 @@
 import os
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -22,6 +23,14 @@ def get_basenames(arr, d=2): # d=2 or d=1, anything else unsupported
 def slice_columns(arr, k=5):  # assumes 2d array
     return [v[:k] for v in arr]
 
+def calc_mapk(actual, expected, k):
+    mapk = metrics.mapk(slice_columns(actual, k), slice_columns(expected, k))
+    return mapk
+
+def calc_mark(actual, expected, k):
+    mark = recmetrics.mark(slice_columns(actual, k), slice_columns(expected, k))
+    return mark
+
 # The first values' most similar image is the second value.
 def extractSimilarImagesAnswers(filepath):
     similar_images = dict()
@@ -33,6 +42,86 @@ def extractSimilarImagesAnswers(filepath):
             similar_images.update({input_output[0]: rel_list})
 
     return similar_images
+
+'''
+  The cifar_dir structure BEFORE:
+    -cifar_dir
+      -test
+        -class0
+          -img001.png
+          -img002.png
+          -img950.png
+        -class7
+          -img001.png
+          -img002.png
+          -img950.png
+  
+  similar_images is extracted as such:
+    {
+      dog: {'img103.png', ..., 'img481.png'}
+      cat: {'img937.png', ..., 'img168.png'}
+      ...
+      airplane: {'img071.png', ..., 'img629.png'}
+    }
+  
+  expected_paths is extracted as such:  # should align with actual_paths in terms of input to output
+    [
+      ['img103.png', ..., 'img481.png'], # retrieved images similar to dogs (a specific dog image)
+      ['img937.png', ..., 'img168.png'], # retrieved images similar to cats (a specific cat image)
+    ]
+
+  AND the cifar_dir structure AFTER:
+    -cifar_dir
+      -index_corpus
+        -img100001.png
+        -img100002.png
+        -img100950.png
+      -test_corpus
+        -img01.png
+        -img02.png
+        -img50.png
+'''
+def extractSimilarImagesAnswersCifar(cifar_dir):
+    # Need test_image_names (5 images in each class, total of 500 test imgs):
+    # Make similar_images as mentioned above^
+    # For each key in similar_images, turn it's value into a list and shuffle
+    # For each key in similar_images, save first 95 values into an index_corpus_map (keep classes as key)
+    # For each key in similar_images, save last 5 into an test_corpus_map (keep classes as key)
+    # Turn entire test_corpus values into single list and shuffle (save into test_image_names).
+    # While doing above step, generate expected_paths 
+ 
+    # Also need to reorganize into new file structure
+    os.mkdir(os.path.join(cifar_dir, "index_corpus"))
+    os.mkdir(os.path.join(cifar_dir, "test_corpus"))
+
+    similar_images = dict() # basically index_corpus_map + test_corpus_map
+    index_corpus_map = dict()
+    test_corpus_map = dict()
+    test_image_paths = []
+    expected_paths = []
+    for dir in os.listdir(os.path.join(cifar_dir, 'test')):
+      class_img_names = os.listdir(os.path.join(cifar_dir, 'test', dir))
+      random.shuffle(class_img_names)
+
+      index_corpus_map.update({dir: set(class_img_names[:95])})
+      test_corpus_map.update({dir: set(class_img_names[95:])})
+      similar_images.update({dir: set(class_img_names)})
+
+      #test_image_paths.extend(class_img_names[95:])
+      for img_name in class_img_names[95:]:
+        #expected_paths.append(class_img_names[:95])
+        new_img_path = os.path.join(cifar_dir, "test_corpus", img_name)
+        os.rename(os.path.join(cifar_dir, "test", dir, img_name), new_img_path)
+        test_image_paths.append(new_img_path)
+
+      sub_expected_paths = []
+      for img_name in class_img_names[:95]:
+        new_img_path = os.path.join(cifar_dir, "index_corpus", img_name)
+        os.rename(os.path.join(cifar_dir, "test", dir, img_name), new_img_path)
+        sub_expected_paths.append(new_img_path)
+      expected_paths.append(sub_expected_paths)
+
+    return test_image_paths, expected_paths
 
 # count how many relevants images from top-k actual.
 # assumes actuals and expecteds to align in input_outputs
@@ -76,66 +165,79 @@ def precision(actual_paths, expected_paths, k, image_names):
 
     print(f"Precision@{k}: {p}")
 
-# Set load evaluation dataset.
-index_image_corpus = "example_image_corpus"
-test_image_corpus = "example_image_corpus"
-similarity_path = "test_image_corpus/similarity.txt"
-similar_images = extractSimilarImagesAnswers(similarity_path)
-num_results = 10
+def run(use_cifar=False):
+    # Set load evaluation dataset.
+    print(f"Using cifar: {use_cifar}")
+    if use_cifar: 
+        # Should run on Google Colab. Change cifar_dir, index_image_corpus, and test_image_corpus to wherever your data is.
+        # Dataset available at: https://drive.google.com/file/d/1Zivf7cXpXAHPoVii0Mp3hecWJJx4ZBY_/view?usp=sharing
+        # The used dataset is only the test dataset of https://www.kaggle.com/joaopauloschuler/cifar100-128x128-resized-via-cai-super-resolution.
+        cifar_dir = "/content/crier/backend/cifar100-128"                        # Should exist already.
+        index_image_corpus = "/content/crier/backend/cifar100-128/index_corpus"  # Will create this dir. 950 images per class to index.
+        test_image_corpus = "/content/crier/backend/cifar100-128/test_corpus"    # Will create this dir. 50 images per class to test           
+        test_image_names, expected_paths = extractSimilarImagesAnswersCifar(cifar_dir)
+    else:
+        index_image_corpus = "example_image_corpus"
+        test_image_corpus = "example_image_corpus"
+        similarity_path = "test_image_corpus/similarity.txt"
+        similar_images = extractSimilarImagesAnswers(similarity_path)
+        test_image_names = os.listdir(test_image_corpus)
+        expected_paths = [similar_images[img_name] for img_name in test_image_names]
 
-test_image_names = os.listdir(test_image_corpus)
-expected_paths = [similar_images[img_name] for img_name in test_image_names]
+    num_results = 25 if use_cifar else 10
+    k_range = range(4, 21) if use_cifar else range(1, 11)
+    output_mapk = "mapk_cifar.png" if use_cifar else "mapk_custom.png"
+    output_mark = "mark_cifar.png" if use_cifar else "mark_custom.png"
 
-# Build Retrieval models.
-hist_retriever = histogram.HistogramRetrieval(index_image_corpus, num_results)
-crier_retriever = model.CRIER(token_manager.MODEL_NAME, token_manager.IMAGE_SIZE, num_results)
-crier_retriever.create_engine(index_image_corpus)
-crier_retriever.create_database(index_image_corpus)
+    # Build Retrieval models.
+    hist_retriever = histogram.HistogramRetrieval(index_image_corpus, num_results)
+    crier_retriever = model.CRIER(token_manager.MODEL_NAME, token_manager.IMAGE_SIZE, num_results)
+    crier_retriever.create_engine(index_image_corpus)
+    crier_retriever.create_database(index_image_corpus)
 
-# Run Hisogram-Retrieval on dataset, retrieve top-k images, and save total time.
-hist_actual_paths = []
-for test_image_name in test_image_names:
-    test_image_path = os.path.join(test_image_corpus, test_image_name)
-    _, image_paths, distances = hist_retriever.search(test_image_path)
-    hist_actual_paths.append(image_paths)
-hist_actual_paths = get_basenames(hist_actual_paths)
+    expected_paths = get_basenames(expected_paths)
 
-# Run Hisogram-Retrieval on dataset, retrieve top-k images, and save total time.
-crier_actual_paths = []
-for test_image_name in test_image_names:
-    _, image_paths, distances = crier_retriever.search(test_image_corpus, test_image_name)
-    crier_actual_paths.append(image_paths)
-crier_actual_paths = get_basenames(crier_actual_paths)
+    # Run Hisogram-Retrieval on dataset, retrieve top-k images, and save total time.
+    hist_actual_paths = []
+    for test_image_name in test_image_names:
+        test_image_path = os.path.join(test_image_corpus, test_image_name)
+        _, image_paths, distances = hist_retriever.search(test_image_path)
+        hist_actual_paths.append(image_paths)
+    hist_actual_paths = get_basenames(hist_actual_paths)
 
-def calc_mapk(actual, expected, k):
-    mapk = metrics.mapk(slice_columns(actual, k), slice_columns(expected, k))
-    return mapk
+  # Run CRIER on dataset, retrieve top-k images, and save total time.
+    crier_actual_paths = []
+    for test_image_name in test_image_names:
+        _, image_paths, distances = crier_retriever.search(index_image_corpus, test_image_name)
+        crier_actual_paths.append(image_paths)
+    crier_actual_paths = get_basenames(crier_actual_paths)
 
-def calc_mark(actual, expected, k):
-    mark = recmetrics.mark(slice_columns(actual, k), slice_columns(expected, k))
-    return mark
+  # Evaluate Histogram and CRIER retrievers. Need to compare total times taken.
+    # Evaluate Histogram and CRIER retrievers. Need to compare total times taken.
+    hist_mapks = []
+    hist_marks = []
 
-# Evaluate Histogram and CRIER retrievers. Need to compare total times taken.
-hist_mapks = []
-hist_marks = []
+    crier_mapks = []
+    crier_marks = []
 
-crier_mapks = []
-crier_marks = []
+    print(f"\nCalculating MAP@k and MAR@k values for HistogramRetrieval and CRIER.")
+    for k in k_range:
+        hist_mapks.append(calc_mapk(hist_actual_paths, expected_paths, k))
+        hist_marks.append(calc_mark(hist_actual_paths, expected_paths, k))
+        
+        crier_mapks.append(calc_mapk(crier_actual_paths, expected_paths, k))
+        crier_marks.append(calc_mark(crier_actual_paths, expected_paths, k))
+    print(f"\nMetrics calculated.")
 
-k_range = range(1, 11)
-print(f"\nCalculating MAP@k and MAR@k values for HistogramRetrieval and CRIER.")
-for k in k_range:
-    hist_mapks.append(calc_mapk(hist_actual_paths, expected_paths, k))
-    hist_marks.append(calc_mark(hist_actual_paths, expected_paths, k))
+    recmetrics.mapk_plot([hist_mapks, crier_mapks], ['HistogramRetrieval', 'CRIER'], k_range)
+    plt.savefig(output_mapk)
+
+    recmetrics.mark_plot([hist_marks, crier_marks], ['HistogramRetrieval', 'CRIER'], k_range)
+    plt.savefig(output_mark)
+
+    print(f"Saved MAP@k and MAP@k plots.")
+
     
-    crier_mapks.append(calc_mapk(crier_actual_paths, expected_paths, k))
-    crier_marks.append(calc_mark(crier_actual_paths, expected_paths, k))
-print(f"\nMetrics calculated.")
-
-recmetrics.mapk_plot([hist_mapks, crier_mapks], ['HistogramRetrieval', 'CRIER'], k_range)
-plt.savefig('mapks.png')
-
-recmetrics.mark_plot([hist_marks, crier_marks], ['HistogramRetrieval', 'CRIER'], k_range)
-plt.savefig('marks.png')
-
-print(f"Saved MAP@k and MAP@k plots.")
+# run(False) Can run locally without any additional setup(besides installing from requirements.txt)
+# run(True)  Preferable to use Google Colab for higher memory bandwith(suggested is 12gb RAM). Feel free to experiment with
+#            changing BATCH_SIZE in model_defs.

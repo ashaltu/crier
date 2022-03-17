@@ -97,7 +97,7 @@ class SearchDatabase(Resource):
                 img.save(search_img_path)
 
             data = None
-            if token_manager.crier.engine_available(corpus_dir):
+            if token_manager.crier.engine_available(token):
                 #neighbors, images, image_names, distances = token_manager.crier.search(corpus_dir, search_basename)
                 neighbors, image_paths, distances = token_manager.crier.search(corpus_dir, search_basename)
                 print(f"Search request successfully fulfilled for token: {token}")
