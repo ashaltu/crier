@@ -190,7 +190,7 @@ def run(use_cifar=False, use_imagenette=False):
     crier_retriever.create_engine(index_image_corpus)
     crier_retriever.create_database(index_image_corpus)
 
-    expected_paths = get_basenames(expected_paths)
+    if use_cifar or use_imagenette: expected_paths = get_basenames(expected_paths)
 
     # Run Hisogram-Retrieval on dataset, retrieve top-k images, and save total time.
     hist_actual_paths = []
@@ -233,7 +233,7 @@ def run(use_cifar=False, use_imagenette=False):
     print(f"Saved MAP@k and MAP@k plots.")
 
     
-# run() # Can run locally without any additional setup(besides installing from requirements.txt)
+run() # Can run locally without any additional setup(besides installing from requirements.txt)
 # run(use_cifar=True)  # Preferable to use Google Colab for higher memory bandwith(suggested is 12gb RAM). Feel free to experiment with
 #                      # changing BATCH_SIZE in model_defs.
 # run(use_imagenette=True) # Same as use_cifar but for the Imagenette2-320 dataset.

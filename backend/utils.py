@@ -12,7 +12,7 @@ import tensorflow as tf
 def load_image_id_paths_map(images_dir):
   dir_prefix = os.path.join(os.getcwd(), images_dir)
   image_paths = []
-  for ext in ['*.png', '*.jpg', '*.jpeg', '*.JPEG', '*.PNG', '*.jpg']:
+  for ext in ['*.png', '*.jpg', '*.jpeg', '*.JPEG', '*.PNG', '*.JPG']:
     image_paths.extend(glob.glob(os.path.join(dir_prefix, ext)))
   return {idx: path for idx, path in enumerate(image_paths)}
 
@@ -54,11 +54,11 @@ def load_image_id_embedding_map(model, image_id_arr_map):
   return map
 
 # Build a ScaNN index for later ANN lookups.
-def load_search_engine(corpus_image_embeddings, num_results):
+def load_search_engine(corpus_image_embeddings, num_results, similarity_function="dot_product"):
   dataset = np.array(list(corpus_image_embeddings))
   num_leaves = int(math.sqrt(len(corpus_image_embeddings)))
 
-  search_engine = scann.scann_ops_pybind.builder(dataset, num_results, "squared_l2").score_brute_force().build()
+  search_engine = scann.scann_ops_pybind.builder(dataset, num_results, similarity_function).score_brute_force().build()
   return search_engine
 
 def image_path_to_arr(image_path, image_size):
