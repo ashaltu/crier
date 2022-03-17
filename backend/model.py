@@ -43,7 +43,7 @@ class CRIER(object):
       if corpus_dir not in self.engines or not self.engine_available(os.path.basename(corpus_dir)): return
 
       self.engines[corpus_dir].create_database(self.encoder, corpus_dir)
-      if not self.engine_available(corpus_dir): self.token_threads.remove(corpus_dir)
+      if not self.engine_available(corpus_dir): self.token_threads.remove(os.path.basename(corpus_dir))
       print(f"Finished indexing job on token: {corpus_dir}")
 
     # See SearchEngine.update_database.
@@ -51,7 +51,7 @@ class CRIER(object):
       if corpus_dir not in self.engines or not self.engine_available(os.path.basename(corpus_dir)): return
 
       self.engines[corpus_dir].update_database(self.encoder, corpus_dir)
-      if not self.engine_available(corpus_dir): self.token_threads.remove(corpus_dir)
+      if not self.engine_available(corpus_dir): self.token_threads.remove(os.path.basename(corpus_dir))
       print(f"Finished indexing job on token: {corpus_dir}")
 
     # See SearchEngine.search_database.

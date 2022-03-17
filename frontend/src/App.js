@@ -50,7 +50,8 @@ export default class App extends Component {
     let new_cookie = "token=" + results['new_token'] + "; expires=" + expireDate.toUTCString() + ";";
     this.setState({
         token: results['new_token'],
-        expiration: results['expiration']
+        expiration: results['expiration'],
+        errorLabel: ''
     });
     
     document.cookie = new_cookie;
@@ -161,7 +162,7 @@ export default class App extends Component {
         {
           this.state.showDemo && 
           <>
-            <button onClick={() => this.setState({showDemo: false})}>
+            <button onClick={() => this.setState({showDemo: false, errorLabel: ''})}>
               Show Writeup
             </button>
             {Demo(this.createCookie, this.uploadImages, this.deleteImages, this.searchImage, this.insertImages)}
@@ -171,7 +172,7 @@ export default class App extends Component {
         { 
           !this.state.showDemo && 
           <>
-            <button onClick={() => this.setState({showDemo: true})}>
+            <button onClick={() => this.setState({showDemo: true, errorLabel: ''})}>
               Show Demo
             </button>
             {Writeup(this.state.markdown)}

@@ -1,20 +1,26 @@
 import os
 import numpy as np
+import matplotlib.pyplot as plt
+
+import ml_metrics as metrics
+import recmetrics
 
 # Local
 import histogram
 import model
 import token_manager
 
-# Local only
+def get_basenames(arr, d=2): # d=2 or d=1, anything else unsupported
+    if d==2: 
+        ret = []
+        for subarr in arr:
+            ret.append([os.path.basename(v) for v in subarr])
+        return ret
 
-# from tensorflow.python.compiler.mlcompute import mlcompute
-# tf.compat.v1.disable_eager_execution()
-# mlcompute.set_mlc_device(device_name='gpu')
-# print("is_apple_mlc_enabled %s" % mlcompute.is_apple_mlc_enabled())
-# print("is_tf_compiled_with_apple_mlc %s" % mlcompute.is_tf_compiled_with_apple_mlc())
-# print(f"eagerly? {tf.executing_eagerly()}")
-# print(tf.config.list_logical_devices())
+    return [os.path.basename(v) for v in arr]
+
+def slice_columns(arr, k=5):  # assumes 2d array
+    return [v[:k] for v in arr]
 
 # The first values' most similar image is the second value.
 def extractSimilarImagesAnswers(filepath):
@@ -68,26 +74,7 @@ def precision(actual_paths, expected_paths, k, image_names):
     #print(f"possible_tp: {possible_tp}")
     p = actual_tp / possible_tp     # We only care about the top-K results. FIX MAYBE?
 
-    print(f"Precision for top-{k}: {p}")
-
-def recall(actual_paths, expected_paths, k):
-    correct_retrieved_relevant_counts, expected_retrieved_relevant_counts = topKPresent(k, actual_paths, expected_paths)
-
-    actual_tp = np.sum(correct_retrieved_relevant_counts)
-    possible_tp = np.sum(expected_retrieved_relevant_counts)
-
-    print(f"actual_tp: {actual_tp}")
-    print(f"possible_tp: {possible_tp}")
-    p = actual_tp / possible_tp      # We only care about the top-K results. FIX MAYBE?
-
     print(f"Precision@{k}: {p}")
-
-
-def f1(k):
-    pass
-
-def accuracy(k):
-    pass
 
 # Set load evaluation dataset.
 index_image_corpus = "example_image_corpus"
@@ -110,25 +97,45 @@ hist_actual_paths = []
 for test_image_name in test_image_names:
     test_image_path = os.path.join(test_image_corpus, test_image_name)
     _, image_paths, distances = hist_retriever.search(test_image_path)
-    hist_actual_paths.append([os.path.basename(image_path) for image_path in image_paths])
+    hist_actual_paths.append(image_paths)
+hist_actual_paths = get_basenames(hist_actual_paths)
 
 # Run Hisogram-Retrieval on dataset, retrieve top-k images, and save total time.
 crier_actual_paths = []
 for test_image_name in test_image_names:
     _, image_paths, distances = crier_retriever.search(test_image_corpus, test_image_name)
-    crier_actual_paths.append([os.path.basename(image_path) for image_path in image_paths])
+    crier_actual_paths.append(image_paths)
+crier_actual_paths = get_basenames(crier_actual_paths)
 
-# Evaluate SIFT, SURF, and CRIER. Compare total times taken 
-print(f"\nCalculating precision values for HistogramRetrieval")
-precision(hist_actual_paths, expected_paths, 1, test_image_names) # Should be 1.0
-precision(hist_actual_paths, expected_paths, 2, test_image_names)
-precision(hist_actual_paths, expected_paths, 3, test_image_names)
-precision(hist_actual_paths, expected_paths, 5, test_image_names)
-precision(hist_actual_paths, expected_paths, 10, test_image_names)
+def calc_mapk(actual, expected, k):
+    mapk = metrics.mapk(slice_columns(actual, k), slice_columns(expected, k))
+    return mapk
 
-print(f"\nCalculating precision values for CRIER")
-precision(crier_actual_paths, expected_paths, 1, test_image_names) # Should be 1.0
-precision(crier_actual_paths, expected_paths, 2, test_image_names)
-precision(crier_actual_paths, expected_paths, 3, test_image_names)
-precision(crier_actual_paths, expected_paths, 5, test_image_names)
-precision(crier_actual_paths, expected_paths, 10, test_image_names)
+def calc_mark(actual, expected, k):
+    mark = recmetrics.mark(slice_columns(actual, k), slice_columns(expected, k))
+    return mark
+
+# Evaluate Histogram and CRIER retrievers. Need to compare total times taken.
+hist_mapks = []
+hist_marks = []
+
+crier_mapks = []
+crier_marks = []
+
+k_range = range(1, 11)
+print(f"\nCalculating MAP@k and MAR@k values for HistogramRetrieval and CRIER.")
+for k in k_range:
+    hist_mapks.append(calc_mapk(hist_actual_paths, expected_paths, k))
+    hist_marks.append(calc_mark(hist_actual_paths, expected_paths, k))
+    
+    crier_mapks.append(calc_mapk(crier_actual_paths, expected_paths, k))
+    crier_marks.append(calc_mark(crier_actual_paths, expected_paths, k))
+print(f"\nMetrics calculated.")
+
+recmetrics.mapk_plot([hist_mapks, crier_mapks], ['HistogramRetrieval', 'CRIER'], k_range)
+plt.savefig('mapks.png')
+
+recmetrics.mark_plot([hist_marks, crier_marks], ['HistogramRetrieval', 'CRIER'], k_range)
+plt.savefig('marks.png')
+
+print(f"Saved MAP@k and MAP@k plots.")
