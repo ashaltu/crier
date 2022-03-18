@@ -46,8 +46,13 @@ def load_image_id_arr_map(image_id_pil_map):
 # Build dict mapping image ids to embeddings.
 def load_image_id_embedding_map(model, image_id_arr_map):
   map = dict()
-  batched_img_arrs = np.array(list(image_id_arr_map.values()))
+  inputs = []
+  for k in sorted(image_id_arr_map.keys()):
+    inputs.append(image_id_arr_map[k])
+  
+  batched_img_arrs = np.array(inputs)
   predictions = model.predict(batched_img_arrs)
+  print(len(predictions))
   for idx, embedding in enumerate(predictions):
     map.update({idx: embedding})
 

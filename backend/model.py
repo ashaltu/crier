@@ -10,7 +10,7 @@ import search_engine
 import model_defs
 
 class CRIER(object):
-    def __init__(self, model_dir, image_size, num_results=10, batch_size=model_defs.BATCH_SIZE):
+    def __init__(self, model_dir, image_size, num_results, batch_size=model_defs.BATCH_SIZE):
       self.num_results = num_results
       self.image_size = image_size
       self.batch_size = batch_size

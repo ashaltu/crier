@@ -24,11 +24,11 @@ def slice_columns(arr, k=5):  # assumes 2d array
     return [v[:k] for v in arr]
 
 def calc_mapk(actual, expected, k):
-    mapk = metrics.mapk(slice_columns(actual, k), slice_columns(expected, k))
+    mapk = metrics.mapk(expected, slice_columns(actual, k), k)
     return mapk
 
 def calc_mark(actual, expected, k):
-    mark = recmetrics.mark(slice_columns(actual, k), slice_columns(expected, k))
+    mark = recmetrics.mark(expected, slice_columns(actual, k), k)
     return mark
 
 # The first values' most similar image is the second value.
@@ -133,8 +133,7 @@ def topKPresent(k, actuals, expecteds, image_names):
     expected_paths: [[relevant_img11, relevant_img12, ..., relevant_img1M],
                      [relevant_img21, relevant_img22, ..., relevant_img2M],
                      ...
-                     [relevant_imgN1, relevant_imgN2, ..., relevant_imgNM]]
-                             
+                     [relevant_imgN1, relevant_imgN2, ..., relevant_imgNM]]                   
 '''
 def precision(actual_paths, expected_paths, k, image_names):
     n = len(image_names)
@@ -177,7 +176,7 @@ def run(use_cifar=False, use_imagenette=False):
       expected_paths = [similar_images[img_name] for img_name in test_image_names]
 
     num_results = 25 if use_cifar or use_imagenette else 10
-    k_range = range(4, 21) if use_cifar or use_imagenette else range(1, 11)
+    k_range = range(1, 26) if use_cifar or use_imagenette else range(1, 11)
     output_mapk = "mapk_cifar.png" if use_cifar or use_imagenette else "mapk_custom.png"
     output_mark = "mark_cifar.png" if use_cifar or use_imagenette else "mark_custom.png"
 
@@ -200,14 +199,13 @@ def run(use_cifar=False, use_imagenette=False):
         hist_actual_paths.append(image_paths)
     hist_actual_paths = get_basenames(hist_actual_paths)
 
-  # Run CRIER on dataset, retrieve top-k images, and save total time.
+    # Run CRIER on dataset, retrieve top-k images, and save total time.
     crier_actual_paths = []
     for test_image_name in test_image_names:
         _, image_paths, distances = crier_retriever.search(index_image_corpus, test_image_name)
         crier_actual_paths.append(image_paths)
     crier_actual_paths = get_basenames(crier_actual_paths)
 
-  # Evaluate Histogram and CRIER retrievers. Need to compare total times taken.
     # Evaluate Histogram and CRIER retrievers. Need to compare total times taken.
     hist_mapks = []
     hist_marks = []
