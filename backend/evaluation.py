@@ -231,7 +231,7 @@ def run(use_cifar=False, use_imagenette=False):
     print(f"Saved MAP@k and MAP@k plots.")
 
     
-run() # Can run locally without any additional setup(besides installing from requirements.txt)
+# run() # Can run locally without any additional setup(besides installing from requirements.txt)
 # run(use_cifar=True)  # Preferable to use Google Colab for higher memory bandwith(suggested is 12gb RAM). Feel free to experiment with
 #                      # changing BATCH_SIZE in model_defs.
 # run(use_imagenette=True) # Same as use_cifar but for the Imagenette2-320 dataset.
