@@ -92,17 +92,17 @@ def extractSimilarImagesAnswersCifarOrImagenette(cifar_dir, original_dir_name='t
       class_img_names = os.listdir(os.path.join(cifar_dir, original_dir_name, dir))
       random.shuffle(class_img_names)
 
-      for img_name in class_img_names[per_class_num_index:]:
-        new_img_path = os.path.join(cifar_dir, "test_corpus", img_name)
-        os.rename(os.path.join(cifar_dir, original_dir_name, dir, img_name), new_img_path)
-        test_image_paths.append(new_img_path)
-
       sub_expected_paths = []
       for img_name in class_img_names[:per_class_num_index]:
         new_img_path = os.path.join(cifar_dir, "index_corpus", img_name)
         os.rename(os.path.join(cifar_dir, original_dir_name, dir, img_name), new_img_path)
         sub_expected_paths.append(new_img_path)
-      expected_paths.append(sub_expected_paths)
+      
+      for img_name in class_img_names[per_class_num_index:]:
+        new_img_path = os.path.join(cifar_dir, "test_corpus", img_name)
+        os.rename(os.path.join(cifar_dir, original_dir_name, dir, img_name), new_img_path)
+        test_image_paths.append(new_img_path)
+        expected_paths.append(sub_expected_paths)
 
     return test_image_paths, expected_paths
 
