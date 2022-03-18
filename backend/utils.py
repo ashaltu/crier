@@ -56,7 +56,6 @@ def load_image_id_embedding_map(model, image_id_arr_map):
   
   batched_img_arrs = np.array(inputs)
   predictions = model.predict(batched_img_arrs)
-  print(len(predictions))
   for idx, embedding in enumerate(predictions):
     map.update({idx: embedding})
 
