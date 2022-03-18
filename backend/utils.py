@@ -8,6 +8,8 @@ import numpy as np
 import scann
 import tensorflow as tf
 
+random.seed(17)
+
 # Build dict mapping image ids to their paths.
 def load_image_id_paths_map(images_dir):
   dir_prefix = os.path.join(os.getcwd(), images_dir)
@@ -21,7 +23,7 @@ def load_image_id_pil_map(image_id_paths_map, image_size):
   map = dict()
 
   for k in sorted(image_id_paths_map.keys()):
-    map.update({idx: tf.keras.preprocessing.image.load_img(
+    map.update({k: tf.keras.preprocessing.image.load_img(
                         path=image_id_paths_map[k],
                         target_size=image_size,
                         interpolation='bilinear'
@@ -41,7 +43,7 @@ def load_image_id_arr_map(image_id_pil_map):
   for k in sorted(image_id_pil_map.keys()):
     img_arr = tf.keras.preprocessing.image.img_to_array(image_id_pil_map[k])
     norm_img_arr = normalize_img_arr(img_arr)
-    map.update({idx: norm_img_arr})
+    map.update({k: norm_img_arr})
     
   return map
 
