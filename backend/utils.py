@@ -19,9 +19,10 @@ def load_image_id_paths_map(images_dir):
 # Build dict mapping image ids to PIL image instances.
 def load_image_id_pil_map(image_id_paths_map, image_size):
   map = dict()
-  for idx, path in image_id_paths_map.items():
+
+  for k in sorted(image_id_paths_map.keys()):
     map.update({idx: tf.keras.preprocessing.image.load_img(
-                        path=path,
+                        path=image_id_paths_map[k],
                         target_size=image_size,
                         interpolation='bilinear'
                      )
@@ -36,8 +37,9 @@ def normalize_img_arr(arr):
 # Build dict mapping image ids to image arrays.
 def load_image_id_arr_map(image_id_pil_map):
   map = dict()
-  for idx, pil_image in image_id_pil_map.items():
-    img_arr = tf.keras.preprocessing.image.img_to_array(pil_image)
+
+  for k in sorted(image_id_pil_map.keys()):
+    img_arr = tf.keras.preprocessing.image.img_to_array(image_id_pil_map[k])
     norm_img_arr = normalize_img_arr(img_arr)
     map.update({idx: norm_img_arr})
     

@@ -27,7 +27,7 @@ class SearchEngine(object):
         embedding_sub_map = utils.load_image_id_embedding_map(encoder, corpus_image_id_arr_map)
 
         # We do this since there would be identical conflicing keys and we'd lose embeddings.
-        reindexed_embedding_sub_map = {(k+i*model_defs.BATCH_SIZE) : v for k,v in embedding_sub_map.items()}
+        reindexed_embedding_sub_map = { (k+i*model_defs.BATCH_SIZE) : v for k,v in embedding_sub_map.items() }
         corpus_image_id_embedding_map.update(reindexed_embedding_sub_map)
 
       assert(len(self.corpus_image_id_paths_map) == len(corpus_image_id_embedding_map))
