@@ -94,7 +94,7 @@ I measured mAP@k and mAR@k across my custom dataset, CIFAR-100-128, Imagenette b
 
 To evaluate the datasets, I first split each dataset into an `index` and `test` portion. The splits are percentage-based with ~95% of the dataset going into the `index` corpus and the rest going into the `test` portion. The number of results to be outputted by the ScaNN model for the CIFAR-100-128 and Imagenette datasets are set to 25, whereas the custom dataset is set to 10 since the dataset is so small.
 
-The plots below were created by the `recmetrics` module.
+The plots below were created by the `recmetrics` module. In all three instances, it is clear that CRIER outperforms a Histogram based image retrieval model (higher means better).
 
 ### Evaluation on CIFAR-100-128
 <div style="display:flex;justify-content:space-evenly;">

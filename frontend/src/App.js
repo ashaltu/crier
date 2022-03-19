@@ -6,7 +6,7 @@ import Header from "./components/Header";
 import ImagesBody from "./components/ImagesBody";
 import Nav from "./components/Nav";
 
-import writeupmd from "./components/writeup.md"
+import writeupmd from "../public/assets/docs/writeup.md"
 
 const parseCookie = str =>
   str
@@ -61,7 +61,6 @@ export default class App extends Component {
     let expireDate = new Date( Date.parse(results['expiration']) );
     let new_cookie = "token=" + results['new_token'] + "; expires=" + expireDate.toUTCString() + ";";
     let new_cookie_expiration = "tokenExpiration=" + expireDate.toUTCString() + "; expires=" + expireDate.toUTCString() + ";";
-    console.log("New expiration:", results['expiration'])
     this.setState({
         token: results['new_token'],
         expiration: results['expiration'],
