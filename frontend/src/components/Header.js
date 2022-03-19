@@ -10,12 +10,17 @@ const Header = () => {
 const headingStyle = {
     color:'White',
     backgroundColor:'#ff4931',
-    textAlign:"center"
+    textAlign:"center",
+    margin: 0,
+    padding: '5px'
 }
 
 const subHeadingStyle = {
     color:'Grey',
-    textAlign:"center"
+    textAlign:"center",
+    backgroundColor:'white',
+    margin: 0,
+    padding: '5px'
 }
 
 export default Header

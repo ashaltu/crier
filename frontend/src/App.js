@@ -19,9 +19,9 @@ const parseCookie = str =>
 
 let cookie = (document.cookie) ? parseCookie(document.cookie) : '';
 let initToken = (cookie && cookie['token']) ? cookie['token'] : '';
-let initExpiration = (cookie && cookie['expiration']) ? cookie['expiration'] : '';
+let initExpiration = (cookie && cookie['tokenExpiration']) ? cookie['tokenExpiration'] : '';
 
-const debug = true;
+const debug = false;
 
 export default class App extends Component {
   constructor(props) {
@@ -33,7 +33,7 @@ export default class App extends Component {
       distances: [],
       showDemo: true, // temporary!
       markdown: '',
-      errorLabel: ''
+      errorLabel: 'Start searching by uploading up to 50 images.'
     };
 
     this.backendURL = "http://40.122.200.108:5001/";
@@ -41,7 +41,15 @@ export default class App extends Component {
 
   componentDidMount() {
     fetch(writeupmd).then(res => res.text()).then(text => this.setState({markdown: text}));
-    if (!this.state.token) this.createCookie();
+    if (!this.state.expiration && this.cookieExpired()) this.createCookie();
+  }
+
+  cookieExpired = () => {
+    const currentTime = new Date().toISOString();
+    const tokenExpiration = new Date(this.state.expiration);
+    const isExpired = !this.state.token || (tokenExpiration > currentTime) || (this.state.token && !document.cookie);
+    if (isExpired) this.setErrorLabel("Session expired, please refresh the page to continue.");
+    return isExpired;
   }
 
   createCookie = async () => {
@@ -52,6 +60,8 @@ export default class App extends Component {
     if (debug) console.log('Success:', data);
     let expireDate = new Date( Date.parse(results['expiration']) );
     let new_cookie = "token=" + results['new_token'] + "; expires=" + expireDate.toUTCString() + ";";
+    let new_cookie_expiration = "tokenExpiration=" + expireDate.toUTCString() + "; expires=" + expireDate.toUTCString() + ";";
+    console.log("New expiration:", results['expiration'])
     this.setState({
         token: results['new_token'],
         expiration: results['expiration'],
@@ -59,13 +69,12 @@ export default class App extends Component {
     });
     
     document.cookie = new_cookie;
+    document.cookie = new_cookie_expiration;
   };
 
   uploadImages = () => {
-    if (!this.state.token) {
-      this.setErrorLabel("No token created for some reason. Sorry, this is a backend issue.");
-      return;
-    }
+    if (this.cookieExpired()) return;
+
     const formData = new FormData();
     const photos = document.querySelector('input[id="uploadimages"][multiple]');
 
@@ -73,6 +82,12 @@ export default class App extends Component {
       this.setErrorLabel("Please select images on your device to upload");
       return;
     }
+
+    if (photos.files.length > 50) {
+      this.setErrorLabel("Please select 50 or fewer images to index. This is a demo :(");
+      return;
+    }
+
     formData.append('token', this.state.token);
     for (let i = 0; i < photos.files.length; i++) {
       formData.append(`photos_${i}`, photos.files[i]);
@@ -93,10 +108,8 @@ export default class App extends Component {
   };
 
   deleteImages = () => {
-    if (!this.state.token) {
-      this.setErrorLabel("No token created for some reason. Sorry, this is a backend issue.");
-      return;
-    }
+    if (this.cookieExpired()) return;
+
     fetch(this.backendURL + "removeimages", {
       method: 'POST',
       headers: {
@@ -115,10 +128,7 @@ export default class App extends Component {
   }
 
   searchImage = (useExamples) => {
-    if (!useExamples && !this.state.token) {
-      this.setErrorLabel("No token created for some reason. Sorry, this is a backend issue.");
-      return;
-    }
+    if (!useExamples && this.cookieExpired()) return;
 
     const formData = new FormData();
     const photos = document.querySelector((useExamples) ? 'input[id="searchexamples"]' : 'input[id="searchimages"]');
@@ -147,14 +157,10 @@ export default class App extends Component {
         });
         if (debug) console.log('Success:', result);
       } else if (result['reason'].startsWith("Search request not fulfilled since engine still indexing")) {
-        this.setState({
-          errorLabel: 'Engine is still indexing added images, please wait 15-30s and try again.'
-        })
+        this.setErrorLabel('Engine is still indexing added images, please wait 15-30s and try again.');
         if (debug) console.log('Still indexing:', result);
       } else if (result['reason'].startsWith("No image database uploaded")) {
-        this.setState({
-          errorLabel: 'Please upload your image database to begin searching'
-        })
+        this.setErrorLabel('Please upload your image database to begin searching');
         if (debug) console.log('No image database found:', result);
       }
     })
@@ -180,7 +186,7 @@ export default class App extends Component {
   };
 
   showDemoButtonLabel = () => {
-    return (this.state.showDemo) ? "Show Writeup" : "Show Demo";
+    return (this.state.showDemo) ? "Go to Project Info" : "Go to Demo";
   };
 
   setErrorLabel = (errorMsg) => {
@@ -203,12 +209,15 @@ export default class App extends Component {
 
     return (
       <div style={{display:"block"}}>
-        <Header />
-        <button className="demoButton" style={this.showDemoButtonStyle} onClick={() => this.setState({showDemo: !this.state.showDemo, errorLabel: ''})}>
-          <b>{this.showDemoButtonLabel()}</b>
-        </button>
+        
+        <div style={{position: 'sticky', top: 0}}>
+          <Header />
+          <button className="demoButton" style={this.showDemoButtonStyle} onClick={() => this.setState({showDemo: !this.state.showDemo, errorLabel: ''})}>
+            <u><b>{this.showDemoButtonLabel()}</b></u>
+          </button>
+        </div>
 
-        <div style={{display:'flex'}}>
+        <div style={{display:'flex', justifyContent: 'center'}}>
             {
               this.state.showDemo && 
               <>
