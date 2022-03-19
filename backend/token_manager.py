@@ -11,6 +11,7 @@ import model_defs
 # Important constants.
 TMP_CORPUS_DIR = "tmp_corpus"
 EXPIRATION_DELTA = datetime.timedelta(seconds=1800)    # Half Hour until expiration
+LONG_TERM_DELTA = datetime.timedelta(days=365 * 100)    # Never expires, only used for example corpus
 TOKEN_CLEANER_DELTA = 60    # Clean up stale tokens every minute
 
 EXAMPLE_IMG_CORPUS_DIR = "example_image_corpus" # change
@@ -36,7 +37,6 @@ class TokenManager(object):
         self.crier = model.CRIER(MODEL_NAME, IMAGE_SIZE, NUM_RESULTS)
 
         self.reset_tmp_dir()
-        os.mkdir(TMP_CORPUS_DIR)
         self.__start_token_cleaner()
 
     # Returns boolean if provided string token exists.
@@ -45,16 +45,23 @@ class TokenManager(object):
 
     # Creates a new token a returns it to the user.
     # Byproduct is a temporary storage that will expire in 60 minutes.
-    def create_token(self):
+    def create_token(self, token=None):
         new_token = utils.generate_token()
+        expiration = datetime.datetime.now() + EXPIRATION_DELTA
         while new_token in self.tokens:
             new_token = utils.generate_token()
+        
+        if token:
+            new_token = token
+            if new_token == EXAMPLE_IMG_CORPUS_DIR:
+                expiration = datetime.datetime.now() + LONG_TERM_DELTA
+
         new_usr_dir = os.path.join(TMP_CORPUS_DIR, new_token)
-        os.mkdir(new_usr_dir)
+        if new_token != EXAMPLE_IMG_CORPUS_DIR: os.mkdir(new_usr_dir)
 
         self.tokens.add(new_token)
         self.token_corpus_map.update({ new_token: new_usr_dir })
-        self.token_expiration_map.update({ new_token: (datetime.datetime.now() + EXPIRATION_DELTA) })
+        self.token_expiration_map.update({ new_token: expiration })
         self.crier.create_engine(new_usr_dir)
 
         print(f"Created engine and directory for token: {new_token}")
@@ -92,6 +99,11 @@ class TokenManager(object):
 
         return self.token_expiration_map[token] < datetime.datetime.now()
 
+    # Checks a user has a database:
+    def database_exists(self, token):
+        engine_name = os.path.join(TMP_CORPUS_DIR, token)
+        return engine_name in self.crier.engines and self.crier.engines[engine_name].search_engine
+
     # Removes stale tokens.
     def clean_stale_tokens(self):
         for token in self.tokens:
@@ -102,6 +114,10 @@ class TokenManager(object):
 
     def reset_tmp_dir(self):
         if os.path.exists(TMP_CORPUS_DIR): shutil.rmtree(TMP_CORPUS_DIR)
+        os.mkdir(TMP_CORPUS_DIR)
+        shutil.copytree(EXAMPLE_IMG_CORPUS_DIR, os.path.join(TMP_CORPUS_DIR, EXAMPLE_IMG_CORPUS_DIR))
+        self.create_token(EXAMPLE_IMG_CORPUS_DIR)
+        self.crier.create_database(self.token_corpus_map[EXAMPLE_IMG_CORPUS_DIR])
 
     # Looks for stale tokens and removes them.
     def __start_token_cleaner(self):

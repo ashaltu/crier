@@ -87,7 +87,7 @@ class SearchDatabase(Resource):
                     'img_name' : img1_file
                 }
         '''
-        if 'token' in request.form and token_manager.token_exists(request.form['token']) and len(request.files):
+        if 'token' in request.form and token_manager.token_exists(request.form['token']) and token_manager.database_exists(request.form['token']) and len(request.files):
             token = request.form['token']
             corpus_dir = token_manager.token_corpus_map[token]
             search_basename = f"searchimg_{utils.generate_token()}.jpg"
@@ -110,17 +110,25 @@ class SearchDatabase(Resource):
                             })
             else:
                 print(f"Search request not fulfilled since engine still indexing from token: {token}")
+                reason = f"Search request not fulfilled since engine still indexing from token: {token}"                    
                 data = jsonify({
                             'success': False,
-                            'reason': f"Search request not fulfilled since engine still indexing from token: {token}"
+                            'reason': reason
                             })
 
             os.remove(search_img_path)  # Remove the user's file after done searching.
-
-
             return make_response(data, 200)  
 
-        return {"ErrorMessage": "Invalid POST message."}, 201
+        reason = f"No image database uploaded for token: {request.form['token']}"
+        if not token_manager.crier.engine_available(request.form['token']):
+            reason = f"Search request not fulfilled since engine still indexing from token: {request.form['token']}" 
+
+        print(reason)         
+        data = jsonify({
+                    'success': False,
+                    'reason': reason
+                    })
+        return make_response(data, 201) 
 
 class RetrieveImages(Resource):
     def get(self, token, imgname):

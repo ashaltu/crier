@@ -11,6 +11,7 @@ class SearchEngine(object):
     def __init__(self, image_size, num_results):
       self.image_size = image_size
       self.num_results = num_results
+      self.search_engine = None
 
     # Create image database.
     def create_database(self, encoder, corpus_dir):
