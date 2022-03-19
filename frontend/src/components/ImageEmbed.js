@@ -2,7 +2,7 @@ const ImageEmbed = ({imgPath, distance, rank}) => {
     let imgPathStack = imgPath.split("/");
     const imgName = imgPathStack.pop();
     const token = imgPathStack.pop();
-    const imgUrl = `http://40.122.200.108:5001/${token}/${imgName}`;
+    const imgUrl = `https://crierapi.ashaltu.com/${token}/${imgName}`;
     return (
         <div style={imageEmbedStyle}>
             <img

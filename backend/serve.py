@@ -8,7 +8,7 @@ import endpoints
 
 
 app = Flask(__name__)
-app.config['SERVER_NAME'] = '40.122.200.108:5001'
+app.config['SERVER_NAME'] = 'crierapi.ashaltu.com'
 CORS(app)
 api = Api(app)
 

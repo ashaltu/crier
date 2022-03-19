@@ -36,7 +36,7 @@ export default class App extends Component {
       errorLabel: 'Start searching by uploading up to 50 images.'
     };
 
-    this.backendURL = "http://40.122.200.108:5001/";
+    this.backendURL = "https://crierapi.ashaltu.com/";
   }
 
   componentDidMount() {
