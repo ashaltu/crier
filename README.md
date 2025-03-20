@@ -15,12 +15,12 @@ For the average consumer, searching consists of typing keywords or in some advan
 # Previous work
 For this project, I relied on [extracted feature vectors](https://tfhub.dev/google/imagenet/efficientnet_v2_imagenet1k_s/feature_vector/2) from [EfficientNetV2](https://arxiv.org/abs/2104.00298). EfficientNetV2, released by Google, performs expectionally well for tasks that may require a CNN. It outperforms other SOTA models and trains 5-10x faster on image datasets like CIFAR and ImageNet. Below is a plot comparing it's accuracy against other SOTA models on ImageNet for top-1 accuracy.
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/plots/efficientnetv2_is_a_boss.png" width="60%" alt="Comparison showing EfficientNetV2 outperforming other SOTA on the ImageNet dataset"/>
+    <img src="frontend/public/assets/plots/efficientnetv2_is_a_boss.png" width="60%" alt="Comparison showing EfficientNetV2 outperforming other SOTA on the ImageNet dataset"/>
 </div>
 
 I use [ScaNN](https://ai.googleblog.com/2020/07/announcing-scann-efficient-vector.html), also released by Google, as my Approximate Nearest Neighbor search library. ScaNN is a SOTA ANN library through the development of a new technique called "Anisotropic Vector Quantization". Below is a plot demonstrating its high QPS and accuracy in comparison to other popular ANN libraries.
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/plots/scann.png" width="60%" alt="Comparison showing high accuracy and queries per second where the scann library is dominating"/>
+    <img src="frontend/public/assets/plots/scann.png" width="60%" alt="Comparison showing high accuracy and queries per second where the scann library is dominating"/>
 </div>
 
 # Approach
@@ -54,39 +54,39 @@ For evaluation, I use three different datasets:
 Here is the provided example image corpus that users can search through.
 
 <div style="display:flex;justify-content:space-evenly;flex-wrap:wrap;">
-    <img style="margin:5px;border-radius:10px;" src="assets/example_image_corpus/catt.jpg" width="21%" alt="Cat"/>
-    <img style="margin:5px;border-radius:10px;" src="assets/example_image_corpus/fcat.jpg" width="21%" alt="Friends cat"/>
-    <img style="margin:5px;border-radius:10px;" src="assets/example_image_corpus/house.jpg" width="21%" alt="House 1"/>
-    <img style="margin:5px;border-radius:10px;" src="assets/example_image_corpus/house2.jpg" width="21%" alt="House 2"/>
-    <img style="margin:5px;border-radius:10px;" src="assets/example_image_corpus/sunflower.jpg" width="21%" alt="Sunflower 1"/>
-    <img style="margin:5px;border-radius:10px;" src="assets/example_image_corpus/sunflower2.jpg" width="21%" alt="Sunflower 2"/>
-    <img style="margin:5px;border-radius:10px;" src="assets/example_image_corpus/dog_sunflower.jpg" width="21%" alt="Sunflower dog"/>
-    <img style="margin:5px;" src="assets/example_image_corpus/tree.jpg" width="21%" alt="Tree"/>
+    <img style="margin:5px;border-radius:10px;" src="frontend/public/assets/example_image_corpus/catt.jpg" width="21%" alt="Cat"/>
+    <img style="margin:5px;border-radius:10px;" src="frontend/public/assets/example_image_corpus/fcat.jpg" width="21%" alt="Friends cat"/>
+    <img style="margin:5px;border-radius:10px;" src="frontend/public/assets/example_image_corpus/house.jpg" width="21%" alt="House 1"/>
+    <img style="margin:5px;border-radius:10px;" src="frontend/public/assets/example_image_corpus/house2.jpg" width="21%" alt="House 2"/>
+    <img style="margin:5px;border-radius:10px;" src="frontend/public/assets/example_image_corpus/sunflower.jpg" width="21%" alt="Sunflower 1"/>
+    <img style="margin:5px;border-radius:10px;" src="frontend/public/assets/example_image_corpus/sunflower2.jpg" width="21%" alt="Sunflower 2"/>
+    <img style="margin:5px;border-radius:10px;" src="frontend/public/assets/example_image_corpus/dog_sunflower.jpg" width="21%" alt="Sunflower dog"/>
+    <img style="margin:5px;" src="frontend/public/assets/example_image_corpus/tree.jpg" width="21%" alt="Tree"/>
 </div>
 
 Briefly what it looks to upload an image database. Notice I am using the example image corpus shown above as my database.
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/demos/uploading_images.png" width="100%" alt="Demo of uploading images"/>
+    <img src="frontend/public/assets/demos/uploading_images.png" width="100%" alt="Demo of uploading images"/>
 </div>
 
 My first query will be with this white cat (notice how it is not an image from my database).
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/demos/white_cat.png" width="40%" alt="Demo of search results of white"/>
+    <img src="frontend/public/assets/demos/white_cat.png" width="40%" alt="Demo of search results of white"/>
 </div>
 
 And results after querying for the white cat image.
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/demos/white_cat_results.png" width="100%" alt="Demo of search results"/>
+    <img src="frontend/public/assets/demos/white_cat_results.png" width="100%" alt="Demo of search results"/>
 </div>
 
 Another query this time with a blue house (also not in my database).
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/demos/blue_house.png" width="40%" alt="Demo of search results"/>
+    <img src="frontend/public/assets/demos/blue_house.png" width="40%" alt="Demo of search results"/>
 </div>
 
 And results from searching for the blue house.
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/demos/blue_house_results.png" width="100%" alt="Demo of search results"/>
+    <img src="frontend/public/assets/demos/blue_house_results.png" width="100%" alt="Demo of search results"/>
 </div>
 
 In both search results, it is clear that the model is performing well in returning relevant search results.
@@ -100,20 +100,20 @@ The plots below were created by the `recmetrics` module. In all three instances,
 
 ### Evaluation on CIFAR-100-128
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/plots/mapk_cifar100-128.png" width="45%" alt="Mean Average Precision at K plot showing CRIER outperforming the Histogram based image retrieval on CIFAR 100 128"/>
-    <img src="assets/plots/mark_cifar100-128.png" width="45%" alt="Mean Average Recall at K plot showing CRIER outperforming the Histogram based image retrieval on CIFAR 100 128"/>
+    <img src="frontend/public/assets/plots/mapk_cifar100-128.png" width="45%" alt="Mean Average Precision at K plot showing CRIER outperforming the Histogram based image retrieval on CIFAR 100 128"/>
+    <img src="frontend/public/assets/plots/mark_cifar100-128.png" width="45%" alt="Mean Average Recall at K plot showing CRIER outperforming the Histogram based image retrieval on CIFAR 100 128"/>
 </div>
 
 ### Evaluation on Imagenette
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/plots/mapk_imagenette.png" width="45%" alt="Mean Average Precision at K plot showing CRIER outperforming the Histogram based image retrieval on Imagenette 320"/>
-    <img src="assets/plots/mark_imagenette.png" width="45%" alt="Mean Average Recall at K plot showing CRIER outperforming the Histogram based image retrieval on Imagenette 320"/>
+    <img src="frontend/public/assets/plots/mapk_imagenette.png" width="45%" alt="Mean Average Precision at K plot showing CRIER outperforming the Histogram based image retrieval on Imagenette 320"/>
+    <img src="frontend/public/assets/plots/mark_imagenette.png" width="45%" alt="Mean Average Recall at K plot showing CRIER outperforming the Histogram based image retrieval on Imagenette 320"/>
 </div>
 
 ### Evaluation on custom dataset
 <div style="display:flex;justify-content:space-evenly;">
-    <img src="assets/plots/mapk_custom.png" width="45%" alt="Mean Average Precision at K plot showing CRIER outperforming the Histogram based image retrieval on the custom dataset"/>
-    <img src="assets/plots/mark_custom.png" width="45%" alt="Mean Average Recall at K plot showing CRIER outperforming the Histogram based image retrieval on the custom dataset"/>
+    <img src="frontend/public/assets/plots/mapk_custom.png" width="45%" alt="Mean Average Precision at K plot showing CRIER outperforming the Histogram based image retrieval on the custom dataset"/>
+    <img src="frontend/public/assets/plots/mark_custom.png" width="45%" alt="Mean Average Recall at K plot showing CRIER outperforming the Histogram based image retrieval on the custom dataset"/>
 </div>
 
 # Discussion
